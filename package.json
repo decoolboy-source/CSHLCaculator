@@ -1,0 +1,8 @@
+{
+  "name": "cshl-calculator",
+  "private": true,
+  "description": "Cold Storage Heat Load Calculator — PWA thuần HTML/CSS/JS, không build step. package.json này chỉ dùng để chạy test.",
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  }
+}
