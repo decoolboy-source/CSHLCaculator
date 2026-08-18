@@ -2,7 +2,7 @@
 
 ## Cách 1 — Qua giao diện web (không cần Git)
 1. Vào https://github.com/new → tạo repo mới (vd `cshl-app`), để **Public**.
-2. Vào repo vừa tạo → **Add file → Upload files** → kéo thả TOÀN BỘ nội dung bên trong thư mục này (không kéo cả thư mục `cshl_pwa_github`, mà kéo `index.html`, `manifest.json`, `sw.js`, `privacy.html`, `.nojekyll`, và 2 thư mục `vendor/`, `icons/` vào thẳng gốc repo).
+2. Vào repo vừa tạo → **Add file → Upload files** → kéo thả TOÀN BỘ nội dung bên trong thư mục này (không kéo cả thư mục `cshl_pwa_github`, mà kéo `index.html`, `manifest.json`, `sw.js`, `privacy.html`, `.nojekyll`, và 4 thư mục `css/`, `js/`, `vendor/`, `icons/` vào thẳng gốc repo — thiếu `css/` hoặc `js/` thì app sẽ chạy nhưng KHÔNG có giao diện/không tính toán được, vì từ bản này CSS và JS đã được tách ra khỏi `index.html`).
 3. Commit.
 4. Vào **Settings → Pages** (menu bên trái) → mục "Build and deployment" → Source chọn **"Deploy from a branch"** → Branch chọn **main** / **/ (root)** → Save.
 5. Đợi 1-2 phút, GitHub hiện link dạng `https://<username>.github.io/<ten-repo>/` — đó là link PWA của bạn.
@@ -21,7 +21,7 @@ Sau đó bật Pages giống bước 4 ở Cách 1.
 
 ## Sau khi có link
 - Mở link trên **điện thoại** (Chrome/Safari) → sẽ thấy nút "Thêm vào màn hình chính" / "Cài đặt ứng dụng" — đây là bước cài PWA để dùng như app thật, có icon riêng, chạy offline.
-- Nếu sửa `index.html` sau này: chỉ cần upload lại đè lên file cũ (hoặc `git push` lại) — GitHub Pages tự cập nhật trong ~1 phút.
+- Nếu sửa `index.html`, file trong `css/` hoặc `js/` sau này: upload lại đè lên file cũ tương ứng (hoặc `git push` lại) — GitHub Pages tự cập nhật trong ~1 phút. Nhớ upload đúng file đã sửa (không phải lúc nào cũng là `index.html`, vì HTML/CSS/JS giờ nằm ở 3 nơi khác nhau).
 - Nếu người dùng đã cài PWA trước đó mà không thấy bản mới: có thể do Service Worker cache — mở Cài đặt trình duyệt → xoá dữ liệu trang → mở lại link.
 
 ## Lưu ý

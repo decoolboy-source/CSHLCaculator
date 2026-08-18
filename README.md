@@ -28,6 +28,21 @@ Công cụ **tính toán** tải nhiệt kho lạnh cho kỹ sư nhiệt lạnh 
 
 Chi tiết đầy đủ xem trong tab **Thông tin** của app.
 
+## Cấu trúc thư mục
+
+```
+index.html   — khung trang, chỉ còn HTML thuần (không còn CSS/JS gộp trong file)
+css/app.css  — toàn bộ style
+js/*.js      — các module JS, nạp tuần tự qua <script src> đúng thứ tự phụ thuộc
+              (data → util → db → native → calc → i18n → ui → admin → projects → ai → report → about)
+tests/       — test tự động cho module calc (node --test, không cần cài dependency)
+```
+
+Sửa CSS thì sửa `css/app.css`, sửa logic tính toán thì sửa `js/calc.js`, v.v. — khi deploy phải
+upload đủ cả 2 thư mục `css/` và `js/`, không chỉ mỗi `index.html` (xem `DEPLOY_GITHUB.md`).
+
+Chạy test: `npm test` (dùng `node --test` có sẵn trong Node ≥ 18, không cần `npm install`).
+
 ## Chạy thử tại chỗ (không cần deploy)
 
 ```bash
