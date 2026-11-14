@@ -1,7 +1,9 @@
 // Service Worker — CSHL PWA (bản test nhanh, cài đặt được "Add to Home Screen")
 // Chiến lược: cache-first cho app shell (HTML/JS/icon), network vẫn được ưu tiên khi
 // online để không kẹt bản cũ trong giai đoạn đang test/sửa liên tục.
-const CACHE_NAME = 'cshl-pwa-v1';
+// Cache Storage dùng chung cả origin decoolboy-source.github.io: chỉ xóa cache của chính app này.
+const CACHE_PREFIX = 'cshl-pwa-';
+const CACHE_NAME = CACHE_PREFIX + 'v1';
 const APP_SHELL = [
   './',
   './index.html',
@@ -26,7 +28,7 @@ self.addEventListener('install', function (event) {
 self.addEventListener('activate', function (event) {
   event.waitUntil(
     caches.keys().then(function (keys) {
-      return Promise.all(keys.filter(function (k) { return k !== CACHE_NAME; }).map(function (k) { return caches.delete(k); }));
+      return Promise.all(keys.filter(function (k) { return k.indexOf(CACHE_PREFIX) === 0 && k !== CACHE_NAME; }).map(function (k) { return caches.delete(k); }));
     })
   );
   self.clients.claim();
