@@ -50,3 +50,15 @@ Sau khi có link GitHub Pages, mở bằng Chrome (Android) hoặc Safari (iOS) 
 ## Giấy phép & liên hệ
 
 *(Điền thông tin liên hệ/giấy phép của bạn tại đây)*
+
+## Lịch sử phiên bản
+
+### 2026-11-15 — bản cache `CSHLCaculator-v2`
+
+Chuẩn hóa để chạy chung origin `decoolboy-source.github.io` với các PWA khác:
+
+- Service worker đăng ký bằng đường dẫn tương đối: `register('./sw.js', { scope: './' })`.
+- `manifest`: thêm `"id": "./index.html"` (giữ địa chỉ khởi động cũ để app đã cài không bị coi là app mới), `"start_url": "./"`, `"scope": "./"`.
+- Tên cache đổi sang `CSHLCaculator-v<số>` (trước là `cshl-pwa-v<số>`). Khi kích hoạt chỉ xóa cache của chính app này (cả tiền tố mới và cũ), không đụng cache của app khác.
+- Khóa localStorage có tiền tố `CSHLCaculator:` (`coldstorage_heatload_*`). Lần đầu mở bản mới, app tự chép dữ liệu từ khóa cũ sang khóa mới nếu khóa mới chưa có. Khóa cũ được giữ nguyên.
+- CSDL IndexedDB đổi tên sang `CSHLCaculator:coldstorage_heatload_db`. Lần đầu mở, app chép toàn bộ bảng và bản ghi từ CSDL cũ `coldstorage_heatload_db` sang. CSDL cũ được giữ nguyên.

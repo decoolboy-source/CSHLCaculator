@@ -2,8 +2,10 @@
 // Chiến lược: cache-first cho app shell (HTML/JS/icon), network vẫn được ưu tiên khi
 // online để không kẹt bản cũ trong giai đoạn đang test/sửa liên tục.
 // Cache Storage dùng chung cả origin decoolboy-source.github.io: chỉ xóa cache của chính app này.
-const CACHE_PREFIX = 'cshl-pwa-';
-const CACHE_NAME = CACHE_PREFIX + 'v1';
+const CACHE_PREFIX = 'CSHLCaculator-';
+// Tiền tố cũ của chính app này (trước khi đổi sang tên repo): vẫn dọn để không để lại cache rác.
+const LEGACY_CACHE_PREFIX = 'cshl-pwa-';
+const CACHE_NAME = CACHE_PREFIX + 'v2';
 const APP_SHELL = [
   './',
   './index.html',
@@ -28,7 +30,7 @@ self.addEventListener('install', function (event) {
 self.addEventListener('activate', function (event) {
   event.waitUntil(
     caches.keys().then(function (keys) {
-      return Promise.all(keys.filter(function (k) { return k.indexOf(CACHE_PREFIX) === 0 && k !== CACHE_NAME; }).map(function (k) { return caches.delete(k); }));
+      return Promise.all(keys.filter(function (k) { return (k.indexOf(CACHE_PREFIX) === 0 || k.indexOf(LEGACY_CACHE_PREFIX) === 0) && k !== CACHE_NAME; }).map(function (k) { return caches.delete(k); }));
     })
   );
   self.clients.claim();

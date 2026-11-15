@@ -645,6 +645,67 @@ table.db-table td.num { text-align: right; font-family: var(--font-mono); color:
 </footer>
 
 <script>
+/* [CSHLCaculator] localStorage dùng chung origin với các PWA khác: mọi khóa của app này có tiền tố "CSHLCaculator:".
+   Lần đầu mở bản mới: chép dữ liệu từ khóa cũ sang khóa mới (nếu khóa mới chưa có). Giữ nguyên khóa cũ. */
+(function(){try{var P="CSHLCaculator:",E=[],F=["coldstorage_heatload_"],i,k,K=[];
+for(i=0;i<localStorage.length;i++){k=localStorage.key(i);if(k&&k.indexOf(P)!==0)K.push(k);}
+K.forEach(function(k){var hit=E.indexOf(k)>=0||F.some(function(f){return k.indexOf(f)===0;});
+if(hit&&localStorage.getItem(P+k)===null)localStorage.setItem(P+k,localStorage.getItem(k));});
+}catch(e){}})();
+/* Chép CSDL IndexedDB tên cũ sang tên mới có tiền tố (một lần, giữ nguyên CSDL cũ).
+   Bỏ qua nếu CSDL mới đã có hoặc CSDL cũ không tồn tại. Không bao giờ báo lỗi ra ngoài. */
+window.__idbMigrateOnce = window.__idbMigrateOnce || function(oldName, newName){
+  var memo = window.__idbMigrateMemo = window.__idbMigrateMemo || {};
+  if (memo[newName]) return memo[newName];
+  return memo[newName] = new Promise(function(done){
+    if (typeof indexedDB === 'undefined' || oldName === newName) return done();
+    function exists(name, cb){
+      var r; try { r = indexedDB.open(name); } catch (e) { return cb(false); }
+      r.onupgradeneeded = function(e){ e.target.transaction.abort(); }; // chưa có: hủy để không tạo CSDL rỗng
+      r.onsuccess = function(){ r.result.close(); cb(true); };
+      r.onerror = function(ev){ if (ev && ev.preventDefault) ev.preventDefault(); cb(false); };
+    }
+    exists(newName, function(hasNew){ if (hasNew) return done();
+      exists(oldName, function(hasOld){ if (!hasOld) return done();
+        var ro = indexedDB.open(oldName);
+        ro.onerror = function(ev){ if (ev && ev.preventDefault) ev.preventDefault(); done(); };
+        ro.onsuccess = function(){
+          var src = ro.result, names = [].slice.call(src.objectStoreNames), schema = [], data = {};
+          if (!names.length) { src.close(); return done(); }
+          var tx = src.transaction(names, 'readonly');
+          names.forEach(function(n){
+            var s = tx.objectStore(n), vals = null, keys = null;
+            schema.push({ name: n, keyPath: s.keyPath, autoIncrement: s.autoIncrement,
+              indexes: [].slice.call(s.indexNames).map(function(i){ var x = s.index(i);
+                return { name: i, keyPath: x.keyPath, unique: x.unique, multiEntry: x.multiEntry }; }) });
+            s.getAll().onsuccess = function(e){ vals = e.target.result; if (keys) data[n] = { v: vals, k: keys }; };
+            s.getAllKeys().onsuccess = function(e){ keys = e.target.result; if (vals) data[n] = { v: vals, k: keys }; };
+          });
+          tx.onerror = function(){ src.close(); done(); };
+          tx.oncomplete = function(){
+            var ver = src.version; src.close();
+            var rn = indexedDB.open(newName, ver);
+            rn.onupgradeneeded = function(e){
+              var db = e.target.result, t = e.target.transaction;
+              schema.forEach(function(sc){
+                var o = {}; if (sc.keyPath !== null) o.keyPath = sc.keyPath; if (sc.autoIncrement) o.autoIncrement = true;
+                var st = db.createObjectStore(sc.name, o);
+                sc.indexes.forEach(function(i){ st.createIndex(i.name, i.keyPath, { unique: i.unique, multiEntry: i.multiEntry }); });
+              });
+              schema.forEach(function(sc){
+                var st = t.objectStore(sc.name), d = data[sc.name]; if (!d) return;
+                d.v.forEach(function(v, i){ if (sc.keyPath === null) st.put(v, d.k[i]); else st.put(v); });
+              });
+            };
+            rn.onsuccess = function(){ rn.result.close(); done(); };
+            rn.onerror = function(ev){ if (ev && ev.preventDefault) ev.preventDefault(); done(); };
+          };
+        };
+      });
+    });
+  });
+};
+
 
 // ===== data.js =====
 // ═══════════════════════════════════════════════════════════════
@@ -698,9 +759,10 @@ window.ColdStorageHeatLoad = window.ColdStorageHeatLoad || {};
   'use strict';
 
   // ── App-specific storage key prefix (tránh đụng độ giữa nhiều app trong Hub) ──
-  const DB_NAME = 'coldstorage_heatload_db';
+  const DB_NAME = 'CSHLCaculator:coldstorage_heatload_db';
+  const LEGACY_DB_NAME = 'coldstorage_heatload_db';
   const DB_VERSION = 4; // tăng version — thêm store rackLayoutConfig (hằng số bố trí kệ, sửa được qua Database)
-  const LS_PREFIX = 'coldstorage_heatload_'; // chỉ dùng cho cờ cài đặt nhỏ (ngôn ngữ, đơn vị)
+  const LS_PREFIX = 'CSHLCaculator:coldstorage_heatload_'; // chỉ dùng cho cờ cài đặt nhỏ (ngôn ngữ, đơn vị)
 
   const STORES = [
     'products', 'materials', 'respiration', 'doorTypes', 'panelSpecs',
@@ -715,6 +777,8 @@ window.ColdStorageHeatLoad = window.ColdStorageHeatLoad || {};
     _conn: null,
 
     async open() {
+      if (this._conn) return this._conn;
+      await window.__idbMigrateOnce(LEGACY_DB_NAME, DB_NAME);
       if (this._conn) return this._conn;
       return new Promise((resolve, reject) => {
         const req = indexedDB.open(DB_NAME, DB_VERSION);
@@ -5492,7 +5556,7 @@ window.CSHL_About = (function () {
   });
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('sw.js').catch(function (err) {
+      navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(function (err) {
         console.warn('Không đăng ký được Service Worker (bình thường nếu đang mở qua file:// hoặc http không có HTTPS):', err);
       });
     });
