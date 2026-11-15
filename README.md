@@ -62,3 +62,13 @@ Chuẩn hóa để chạy chung origin `decoolboy-source.github.io` với các P
 - Tên cache đổi sang `CSHLCaculator-v<số>` (trước là `cshl-pwa-v<số>`). Khi kích hoạt chỉ xóa cache của chính app này (cả tiền tố mới và cũ), không đụng cache của app khác.
 - Khóa localStorage có tiền tố `CSHLCaculator:` (`coldstorage_heatload_*`). Lần đầu mở bản mới, app tự chép dữ liệu từ khóa cũ sang khóa mới nếu khóa mới chưa có. Khóa cũ được giữ nguyên.
 - CSDL IndexedDB đổi tên sang `CSHLCaculator:coldstorage_heatload_db`. Lần đầu mở, app chép toàn bộ bảng và bản ghi từ CSDL cũ `coldstorage_heatload_db` sang. CSDL cũ được giữ nguyên.
+
+#### Xuất/Nhập dữ liệu (cùng bản)
+
+Cài đặt → Sao lưu: file `CSHLCaculator_YYYYMMDD.json` chứa toàn bộ CSDL (dự án, phòng đã tính, lịch sử, danh mục). Vẫn nhận file `CSHL_Backup_*.json` kiểu cũ.
+
+- File gồm các trường `app`, `schemaVersion` (= 1), `exportedAt`, `projectCount`, `data`.
+- Khi nhập: kiểm tra định dạng JSON, đúng `app` và `schemaVersion` **trước khi ghi**; báo số dự án; hỏi **Gộp** hay
+  **Thay thế**; xác nhận lần cuối. File sai định dạng thì báo lỗi tiếng Việt và không ghi gì.
+- Xử lý hoàn toàn trên trình duyệt, không gửi dữ liệu đi đâu.
+- Gộp: dự án trong file được thêm thành dự án mới (bỏ qua dự án cùng tên và cùng thời điểm tạo), phòng/lịch sử chuyển theo mã dự án mới; danh mục trùng tên được cập nhật. Thay thế: thay toàn bộ CSDL.
